@@ -28,8 +28,8 @@ jobs:
 
     - name: Mount the disk image
       run: |
-        mkdir /mnt/tmp_mount
-        sudo mount -o loop disk_image.img /mnt/tmp_mount
+        mkdir tmp_mount
+        sudo mount -o loop disk_image.img tmp_mount
 
     - name: Copy files to disk image
       run: |
@@ -37,8 +37,8 @@ jobs:
 
     - name: Unmount the disk image
       run: |
-        sudo umount /mnt/tmp_mount
-        rmdir /mnt/tmp_mount
+        sudo umount tmp_mount
+        rmdir tmp_mount
 
     - name: Upload disk image as artifact
       uses: actions/upload-artifact@v4
