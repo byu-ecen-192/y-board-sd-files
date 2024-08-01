@@ -1,38 +1,48 @@
-name: Create SD Card Image
-on: [push]
+name: Create Disk Image
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
-  create_image:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Create image
-        run: |
-          ls
-          pwd
-          dd if=/dev/zero of=disk_image.img bs=1M count=100
-          mkfs.fat -F 32 disk_image.img
+    - name: Install tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dosfstools mtools
 
-      - name: Mount new image
-        id: mount-image
-        uses: damianperera/mount-image-action@v1
-        with:
-          imagePath: disk_image.img
-          mountPoint: /mnt/tmp_mount
+    - name: Create disk image file
+      run: |
+        # Create an empty disk image file
+        dd if=/dev/zero of=disk_image.img bs=1M count=100
 
-      - name: Write files to mounted image
-        run: echo "Doing something"
+        # Format the image with a FAT32 file system
+        mkfs.fat -F 32 disk_image.img
 
-      - name: Unmount new image
-        uses: damianperera/unmount-image-action@v1
-        with:
-          imagePath: disk_image.img
-          bootDeviceMapper: ${{ steps.mount-image.outputs.bootDeviceMapper }}
-          rootDeviceMapper: ${{ steps.mount-image.outputs.rootDeviceMapper }}
+    - name: Mount the disk image
+      run: |
+        mkdir /mnt/tmp_mount
+        sudo mount -o loop disk_image.img /mnt/tmp_mount
 
+    - name: Copy files to disk image
+      run: |
+        sudo cp -r disk_image_contents/* /mnt/tmp_mount/
 
-          # - uses: actions/upload-artifact@v4
-          #   with:
-          #     name: my-artifact
-          #     path: path/to/artifact/world.txt
+    - name: Unmount the disk image
+      run: |
+        sudo umount /mnt/tmp_mount
+        rmdir /mnt/tmp_mount
+
+    - name: Upload disk image as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: disk-image
+        path: disk_image.img
+
