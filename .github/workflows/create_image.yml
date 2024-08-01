@@ -13,11 +13,24 @@ jobs:
           pwd
           dd if=/dev/zero of=disk_image.img bs=1M count=100
           mkfs.fat -F 32 disk_image.img
-          mkdir /mnt/tmp_mount
-          sudo mount -o loop disk_image.img /mnt/tmp_mount
-          sudo cp -r disk_image_contents/* /mnt/tmp_mount/
-          sudo umount /mnt/tmp_mount
-          rmdir /mnt/tmp_mount
+
+      - name: Mount new image
+        id: mount-image
+        uses: damianperera/mount-image-action@v1
+        with:
+          imagePath: disk_image.img
+          mountPoint: /mnt/tmp_mount
+
+      - name: Write files to mounted image
+        run: echo "Doing something"
+
+      - name: Unmount new image
+        uses: damianperera/unmount-image-action@v1
+        with:
+          imagePath: disk_image.img
+          bootDeviceMapper: ${{ steps.mount-image.outputs.bootDeviceMapper }}
+          rootDeviceMapper: ${{ steps.mount-image.outputs.rootDeviceMapper }}
+
 
           # - uses: actions/upload-artifact@v4
           #   with:
