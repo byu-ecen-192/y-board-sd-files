@@ -1,0 +1,25 @@
+name: Create SD Card Image
+on: [push]
+jobs:
+  create_image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create image
+        run: |
+          ls
+          pwd
+          dd if=/dev/zero of=disk_image.img bs=1M count=100
+          mkfs.fat -F 32 disk_image.img
+          mkdir /mnt/tmp_mount
+          sudo mount -o loop disk_image.img /mnt/tmp_mount
+          sudo cp -r disk_image_contents/* /mnt/tmp_mount/
+          sudo umount /mnt/tmp_mount
+          rmdir /mnt/tmp_mount
+
+          # - uses: actions/upload-artifact@v4
+          #   with:
+          #     name: my-artifact
+          #     path: path/to/artifact/world.txt
